@@ -6,12 +6,11 @@
 
 ## Active (In Progress)
 *Tasks currently being worked on.*
-- [ ] Add README.md
+- [ ] None
 
 ## Up Next (High Priority)
 *Upcoming tasks to be worked on.*
-- [ ] Add FEATURES.md
-- [ ] Add ARCHITECTURE.md
+- [ ] None
 
 ---
 
@@ -49,6 +48,9 @@
 
 ## Completed
 *Recent tasks only. Move tasks to `CHANGELOG.md` after update. Latest to oldest.*
+- [x] Add ARCHITECTURE.md
+- [x] Add FEATURES.md
+- [x] Add README.md
 - [x] Add CHANGELOG.md
 - [x] Add a TODO for feature and idea tracking
 - [x] Implement CMake building

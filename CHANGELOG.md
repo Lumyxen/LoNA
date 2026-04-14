@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CMake build system
 - A to do file (TODO.md)
 - A changelog file (CHANGELOG.md)
+- A README.md file
+- A features list file (FEATURES.md)
+- A file describing the model architecture and design in depth (ARCHITECTURE.md)
 
 ### Changed
 - Nothing yet
