@@ -1,0 +1,58 @@
+# Build directory
+build/
+cmake-build-*/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Compiled files
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+
+# AI harness directories
+.qwen/
+.kilo/
+.claude/
+.cline/
+.aider/
+.windsurf/
+plans/
+
+# AI files
+AGENTS.md
+CLAUDE.md
+.cursorrules
+.qwenignore
+.cursorignore
+.aiderignore
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs and temporary files
+*.log
+tmp/
+temp/
+*.bak
+*.swp
