@@ -400,23 +400,113 @@ Neurogenesis works in tandem with existing structural plasticity and the text I/
 
 for each global_step:
 
-    // 1. Inject pending UTF-8 byte spikes into Input Pool via virtual synapses
-
-    //    (Incoming_Signal = byte_value for each byte)
+    // 1. Inject pending UTF-8 byte spikes into Input Pool (Incoming_Signal = byte_value)
 
     // 2. Deliver all delayed pulses (Incoming_Signal is UINT8)
 
     // 3. Step every neuron (full 8-byte routine: v += Incoming_Signal, etc.)
 
-    // 4. Update every synapse (STP refill, STDP, prune/sprout)
+    // 4. Update every synapse (STP refill + M-modulated STDP)
 
-    // 5. Check local neurogenesis triggers and birth/prune as needed
+    // 5. Sample Output Pool → decode UTF-8
 
-    // 6. Sample Output Pool → decode & emit UTF-8 bytes/characters
+    // 6. Critic computes internal prediction and generates M (or blend with external M)
 
-    // 7. (If more input text) advance next byte
+    // 7. Neurogenesis / pruning check (influenced by M and regional activity)
+
+    // 8. (Optional) Decay M slowly for eligibility
+
+    // 9. Advance next input byte if available
 
 ```
+
+---
+
+## Modulatory Signal M & Critic Module (Good/Bad & Autonomous Learning)
+
+**Thought Process**: To enable "like correct / dislike incorrect" feedback while transitioning to autonomous self-improvement, LoNA uses a three-factor learning rule. The first two factors are local pre/post timing and V-modulation (existing STDP). The third factor is the modulatory signal **M** (UINT8, 0–255), inspired by dopamine. Initially M is provided externally based on output correctness. After training, a small **critic module** generates M internally via reward prediction error (RPE), allowing the network to autonomously reinforce coherent, predictive behavior and weaken incoherent patterns. This mirrors the brain’s shift from external rewards to self-generated prediction errors.
+
+### 1. Modulatory Signal M (Three-Factor Teaching Signal)
+
+- **Range & Meaning**:
+
+  - High (≥ 180): "Good / correct / coherent" — reinforce successful pathways.
+
+  - Low (≤ 80): "Bad / incorrect / incoherent" — weaken erroneous pathways.
+
+  - Neutral (~128): exploration or no strong feedback.
+
+- **Initial Use (External)**: After each output readout window, compare decoded UTF-8 to target text (or use external reward). Set M based on match/error score.
+
+- **M-Modulated STDP** (updated Long-Term Plasticity):
+
+  ```text
+
+  base_delta = (w >> 3) + (V >> 5);
+
+  if (M > 160) {  // Positive: strengthen good correlations
+
+      if (target_fired_in_window) {
+
+          w = min(255, w + (base_delta * (M >> 7)));
+
+      } else {
+
+          w = max(0, w - ((w >> 5) * ((255 - M) >> 6)));
+
+      }
+
+  } else if (M < 100) {  // Negative: weaken bad correlations
+
+      if (target_fired_in_window) {
+
+          w = max(0, w - (base_delta * ((160 - M) >> 5)));
+
+      } else {
+
+          w = min(255, w + (w >> 6));  // mild exploration boost
+
+      }
+
+  } else {
+
+      // Neutral: original V-modulated STDP
+
+  }
+
+  ```
+
+- M also mildly influences P (faster hardening on high M), T_base, sprouting probability, and neurogenesis triggers (high M favors expansion of successful modules; low M accelerates pruning).
+
+### 2. Critic Module (Autonomous Internal M Generation)
+
+- **Size & Location**: Small dedicated cluster (64–256 neurons) near the output pool. Uses the exact same 8-byte LoNA neuron rules.
+
+- **Inputs**: Activity/rhythms from output pool, context from main liquid (via existing or dedicated synapses), and its own recurrent connections for temporal prediction.
+
+- **Function**:
+
+  - Learns to predict "good" (coherent, consistent, predictive) output rhythms during early training (when strongly guided by external M).
+
+  - Computes prediction error: actual output pool activity vs. critic’s expected pattern.
+
+  - Generates internal M = 128 + scaled_error (clamped 0–255), where positive error = better-than-expected coherence, negative = worse.
+
+- **Transition to Autonomy**:
+
+  - Early training: blend external M heavily with critic output so the critic learns to imitate "correct" signals.
+
+  - After sufficient language/world exposure: reduce external M; the critic autonomously drives learning by rewarding coherent continuations and penalizing incoherent ones.
+
+- **Synergy with Other Features**:
+
+  - High surprise (P reset) + positive self-M → extra neurogenesis or sprouting in promising regions.
+
+  - Negative self-M → stronger pruning of incoherent paths.
+
+  - Eligibility: M decays slowly (`M = M - (M >> 6)`) or uses short traces to credit delayed pulses correctly.
+
+This gives LoNA a path from supervised feedback to fully autonomous, self-improving behavior while staying true to its decentralized, liquid, brain-like design. The critic and main liquid co-evolve: better predictions lead to more stable coherent output, which in turn refines the critic.
 
 ---
 
@@ -470,7 +560,7 @@ for each global_step:
 
 ## Notes
 
-The combination of **Intrinsic Plasticity** (the neuron's gate) and **Structural Plasticity** (the synapse's wire) allows LoNA to learn on two timescales simultaneously: fast adaptation and long-term functional identity. With neurogenesis, the system can dynamically grow and refine its own capacity in a manner proven effective in the human brain for millennia — expanding under novelty and pruning what is no longer useful.
+The combination of **Intrinsic Plasticity** (the neuron's gate) and **Structural Plasticity** (the synapse's wire) allows LoNA to learn on two timescales simultaneously: fast adaptation and long-term functional identity. With neurogenesis and the critic-driven autonomous M, the system can dynamically grow its capacity and self-improve toward coherent, predictive behavior in a manner proven effective in the human brain for millennia.
 
 ---
 
